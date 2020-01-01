@@ -28,8 +28,13 @@ def read_urls(filename):
     extracting the hostname from the filename itself.
     Screens out duplicate urls and returns the urls sorted into
     increasing order."""
-    # +++your code here+++
-    pass
+    url_list = []
+    with open(filename) as file:
+        for line in file:
+            match = re.search(r'\S+puzzle+\S+', line)
+            if match:
+                url_list.append(match.group())
+    return sorted(set(url_list))
 
 
 def download_images(img_urls, dest_dir):
@@ -64,6 +69,7 @@ def main(args):
     parsed_args = parser.parse_args(args)
 
     img_urls = read_urls(parsed_args.logfile)
+    print(img_urls)
 
     if parsed_args.todir:
         download_images(img_urls, parsed_args.todir)
