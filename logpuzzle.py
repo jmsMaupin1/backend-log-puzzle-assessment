@@ -29,12 +29,40 @@ def read_urls(filename):
     Screens out duplicate urls and returns the urls sorted into
     increasing order."""
     url_list = []
+    host_name = filename.split('_')[1]
     with open(filename) as file:
         for line in file:
             match = re.search(r'\S+puzzle+\S+', line)
             if match:
-                url_list.append(match.group())
-    return sorted(set(url_list))
+                url_list.append("http://" + host_name + match.group())
+    return sorted(list(set(url_list)), key=lambda url: url[-8:-4])
+
+
+def create_dir(path):
+    """Checks to see if a directory exists, if not creates it"""
+    if not os.path.isdir(path):
+        try:
+            os.makedirs(path)
+        except OSError:
+            print("Creation of directory %s failed" % path)
+            return -1
+
+    return 0
+
+
+def write_html(image_tags):
+    """Takes a string of image tags and inserts them into the body of an html page"""
+
+    html_template = """
+        <html>
+            <body>
+                {}
+            </body>
+        </html>
+    """
+
+    with open('index.html', 'w') as html:
+        html.write(html_template.format(image_tags))
 
 
 def download_images(img_urls, dest_dir):
@@ -45,7 +73,20 @@ def download_images(img_urls, dest_dir):
     with an img tag to show each local image file.
     Creates the directory if necessary.
     """
-    # +++your code here+++
+
+    image_tag_template = "<img src={}>"
+    image_path = dest_dir + "/img{}.jpg"
+    image_tags = ""
+
+    create_dir(dest_dir)
+
+    for idx, url in enumerate(img_urls):
+        final_path = image_path.format(idx)
+        urllib.urlretrieve(url, final_path)
+        image_tags += image_tag_template.format(final_path)
+
+    write_html(image_tags)
+
     pass
 
 
@@ -69,7 +110,6 @@ def main(args):
     parsed_args = parser.parse_args(args)
 
     img_urls = read_urls(parsed_args.logfile)
-    print(img_urls)
 
     if parsed_args.todir:
         download_images(img_urls, parsed_args.todir)
